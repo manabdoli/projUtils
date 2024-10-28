@@ -1,0 +1,19 @@
+Package: projUtils
+Type: Package
+Title: Creating and Managing R Projects
+Version: 0.1.0
+Authors@R: person('Mansour Abdoli. PhD',
+                  email = 'mabdoli@fullerton.edu',
+                  role = c('cre', 'aut'))
+Description: A package to help me create new project and manage them.
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+License: MIT + file LICENSE
