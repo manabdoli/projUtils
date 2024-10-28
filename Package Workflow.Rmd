@@ -1,0 +1,459 @@
+---
+title: "Package Workflow"
+author: "Mansour Abdoli, PhD"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+# File: setup_package.R
+
+## 1. Initialize new R package
+```{r}
+library(usethis)
+library(devtools)
+
+```
+
+### Create a new package (run once)
+```{r}
+create_package <- function(path, add2repo=TRUE) {
+  usethis::create_package(path)
+  usethis::use_git()       # Initialize git
+  if(add2repo)
+    usethis::use_github()    # Optional: Set up GitHub repository
+  
+  # Set up package infrastructure
+  usethis::use_mit_license()    # Or another license
+  usethis::use_readme_md()      # Create README.md
+  usethis::use_news_md()        # Create NEWS.md for tracking changes
+  usethis::use_package_doc()    # Package-level documentation
+  usethis::use_testthat()       # Set up testing infrastructure
+  #usethis::use_travis()         # Optional: Set up Travis CI
+  #usethis::use_coverage()       # Optional: Set up test coverage
+  
+  # Create standard directories
+  dir.create("inst", showWarnings = FALSE)
+  dir.create("data", showWarnings = FALSE)
+}
+```
+## 2. Set up .gitignore
+```{r}
+setup_gitignore <- function() {
+  usethis::use_git_ignore(c(
+    ".Rproj.user",
+    ".Rhistory",
+    ".RData",
+    ".Ruserdata",
+    "*.Rproj",
+    ".DS_Store",    # For Mac users
+    "inst/doc",
+    "docs/",
+    "*.tar.gz",
+    "*.Rcheck/",
+    "*.rdb",
+    "*.rdx",
+    "*.dll",
+    "*.o",
+    "*.so",
+    "src/*.o",
+    "src/*.so",
+    "src/*.dll"
+  ))
+}
+```
+
+## 3. Set up Travis CI configuration
+```{r}
+setup_travis <- function() {
+  writeLines(
+    c(
+      "language: r",
+      "cache: packages",
+      "",
+      "r:",
+      "  - release",
+      "  - devel",
+      "",
+      "sudo: false",
+      "",
+      "after_success:",
+      "  - Rscript -e 'covr::codecov()'",
+      "",
+      "notifications:",
+      "  email:",
+      "    on_success: change",
+      "    on_failure: always"
+    ),
+    ".travis.yml"
+  )
+}
+```
+
+
+## 4. Create DESCRIPTION template
+```{r}
+setup_description <- function(pkg_name, 
+                              Title="What the Package Does (One Line, Title Case)",
+                              maintainer_name, maintainer_email,
+                              Description = "What the package does (one paragraph).") {
+  desc_template <- paste0(
+    "Package: ", pkg_name, "\n",
+    "Type: Package\n",
+    "Title: ", Title,"\n",
+    "Version: 0.1.0\n",
+    "Authors@R: person('", maintainer_name, "',\n",
+    "                  email = '", maintainer_email, "',\n",
+    "                  role = c('cre', 'aut'))\n",
+    "Description: ", Description, "\n",
+    #"License: MIT + file LICENSE\n", # License will be added using usethis::xxx_license()
+    "Encoding: UTF-8\n",
+    "LazyData: true\n",
+    "Roxygen: list(markdown = TRUE)\n",
+    "RoxygenNote: 7.1.1\n",
+    "Suggests:\n",
+    "    testthat (>= 3.0.0),\n",
+    "    knitr,\n",
+    "    rmarkdown\n",
+    "Config/testthat/edition: 3\n",
+    "VignetteBuilder: knitr\n"
+  )
+  writeLines(desc_template, "DESCRIPTION")
+}
+```
+## 5. Create development version script
+```{r}
+create_dev_version <- function() {
+  usethis::use_version('dev')
+}
+
+# Example usage:
+if (FALSE) {  # Prevent accidental execution
+  # Initialize new package
+  create_package("projUtils")
+  setwd(paste0(getwd(), .Platform$file.sep ,"projUtils"))
+  
+  # Set up version control infrastructure
+  setup_gitignore()
+  setup_travis()
+  setup_description("mypackage", "Your Name", "your.email@example.com")
+  
+  # Initial commit
+  system("git add .")
+  system('git commit -m "Initial commit"')
+  
+  # Create development version
+  create_dev_version()
+}
+```
+
+
+## 6. Example workflow functions
+```{r}
+increment_version <- function(type = c("patch", "minor", "major")) {
+  type <- match.arg(type)
+  usethis::use_version(type)
+}
+
+create_feature_branch <- function(feature_name) {
+  system(paste0("git checkout -b feature/", feature_name))
+}
+
+merge_feature <- function(feature_name) {
+  system("git checkout main")
+  system(paste0("git merge feature/", feature_name))
+}
+
+prepare_release <- function(version) {
+  # Update NEWS.md
+  usethis::edit_file("NEWS.md")
+  
+  # Update version number
+  desc::desc_set_version(version)
+  
+  # Run tests
+  devtools::test()
+  
+  # Build documentation
+  devtools::document()
+  
+  # Check package
+  devtools::check()
+}
+
+create_release_tag <- function(version) {
+  system(paste0('git tag -a v', version, ' -m "Release version ', version, '"'))
+  system("git push --tags")
+}
+```
+
+## 7. Example .Rbuildignore
+```{r}
+setup_rbuildignore <- function() {
+  usethis::use_build_ignore(c(
+    "^.*\\.Rproj$",
+    "^\\.Rproj\\.user$",
+    "^data-raw$",
+    "^docs$",
+    "^\\.travis\\.yml$",
+    "^codecov\\.yml$",
+    "^_pkgdown\\.yml$",
+    "^README\\.Rmd$",
+    "^cran-comments\\.md$",
+    "^\\.github$"
+  ))
+}
+```
+
+
+# Handling Dependencies
+
+## File: dependencies_management.R
+
+```{r}
+library(usethis)
+library(desc)
+library(devtools)
+library(remotes)
+```
+
+
+## 1. Function to manage package dependencies
+```{r}
+manage_dependencies <- function(pkg_path = ".") {
+  # Initialize description file if it doesn't exist
+  if (!file.exists(file.path(pkg_path, "DESCRIPTION"))) {
+    stop("DESCRIPTION file not found. Are you in a package directory?")
+  }
+  
+  # Function to add a package dependency
+  add_dependency <- function(pkg_name, type = c("Imports", "Suggests", "Depends", "Enhances", "LinkingTo")) {
+    type <- match.arg(type)
+    usethis::use_package(pkg_name, type = type)
+  }
+  
+  # Function to add version constraints
+  add_version_constraint <- function(pkg_name, version_constraint) {
+    desc::desc_set_dep(pkg_name, version = version_constraint)
+  }
+  
+  # Function to remove a package dependency
+  remove_dependency <- function(pkg_name) {
+    desc::desc_del_dep(pkg_name)
+  }
+  
+  # Return functions in a list
+  list(
+    add = add_dependency,
+    add_version = add_version_constraint,
+    remove = remove_dependency
+  )
+}
+```
+
+## 2. Function to set up package namespace imports
+```{r}
+setup_namespace <- function() {
+  # Create or update NAMESPACE file
+  roxygen2::roxygenize()
+  
+  # Example namespace directives
+  writeLines(c(
+    "# Generated by roxygen2: do not edit by hand",
+    "",
+    "# Import specific functions",
+    "#' @importFrom dplyr filter mutate select",
+    "#' @importFrom ggplot2 ggplot geom_point theme_minimal",
+    "",
+    "# Import entire packages",
+    "#' @import data.table",
+    "",
+    "# Export all functions with names that don't start with dot",
+    "#' @exportPattern \"^[^\\\\.]\"",
+    "",
+    "# S3 method exports",
+    "#' @export",
+    "print.myclass <- function(x, ...) {",
+    "  # method implementation",
+    "}"
+  ), "R/namespace_example.R")
+}
+```
+
+## 3. Function to handle system dependencies
+```{r}
+check_system_dependencies <- function() {
+  # Example system requirements check
+  sys_reqs <- list(
+    python = function() system("python --version") == 0,
+    java = function() system("java -version") == 0,
+    gcc = function() system("gcc --version") == 0
+  )
+  
+  results <- lapply(names(sys_reqs), function(req) {
+    result <- try(sys_reqs[[req]](), silent = TRUE)
+    list(
+      name = req,
+      available = !inherits(result, "try-error") && result
+    )
+  })
+  
+  do.call(rbind, results)
+}
+```
+
+## 4. Function to set up repository sources
+```{r}
+setup_repositories <- function() {
+  # Add multiple repository sources
+  options(
+    repos = c(
+      CRAN = "https://cloud.r-project.org",
+      BioCsoft = "https://bioconductor.org/packages/release/bioc",
+      BioCann = "https://bioconductor.org/packages/release/data/annotation",
+      BioCexp = "https://bioconductor.org/packages/release/data/experiment"
+    )
+  )
+}
+```
+
+## 5. Function to install development dependencies
+```{r}
+install_dev_dependencies <- function() {
+  # Install common development tools
+  devtools::install_deps(dependencies = TRUE)
+  
+  # Additional development packages
+  dev_packages <- c(
+    "testthat",
+    "roxygen2",
+    "covr",
+    "devtools",
+    "usethis",
+    "pkgdown",
+    "styler",
+    "lintr"
+  )
+  
+  installed <- rownames(installed.packages())
+  to_install <- dev_packages[!dev_packages %in% installed]
+  
+  if (length(to_install) > 0) {
+    install.packages(to_install)
+  }
+}
+```
+
+
+## 6. Function to create dependency documentation
+```{r}
+create_dependency_docs <- function() {
+  # Read current dependencies
+  desc <- desc::desc_get_deps()
+  
+  # Create markdown documentation
+  doc <- c(
+    "# Package Dependencies",
+    "",
+    "## Required Packages",
+    "",
+    "### Imports",
+    paste("*", desc[desc$type == "Imports", "package"]),
+    "",
+    "### Suggests",
+    paste("*", desc[desc$type == "Suggests", "package"]),
+    "",
+    "### System Requirements",
+    "* R version >= 3.5.0",
+    "* Python (optional, for Python integration)",
+    "* gcc/g++ (for compilation of C++ code)",
+    "",
+    "## Installation",
+    "```r",
+    "# Install from CRAN",
+    "install.packages('yourpackage')",
+    "",
+    "# Install development version",
+    "remotes::install_github('username/yourpackage')",
+    "```"
+  )
+  
+  writeLines(doc, "dependencies.md")
+}
+```
+
+## 7. Example usage for different dependency scenarios
+```{r}
+example_dependencies <- function() {
+  deps <- manage_dependencies()
+  
+  # Add basic dependencies
+  deps$add("dplyr", "Imports")      # Core dependency
+  deps$add("ggplot2", "Imports")    # Visualization
+  deps$add("testthat", "Suggests")  # Testing framework
+  
+  # Add version constraints
+  deps$add_version("dplyr", ">= 1.0.0")
+  deps$add_version("ggplot2", ">= 3.3.0")
+  
+  # Example of conditional dependency usage
+  writeLines(c(
+    "if (requireNamespace('ggplot2', quietly = TRUE)) {",
+    "  # Code that uses ggplot2",
+    "  plot <- ggplot2::ggplot(data, ggplot2::aes(x, y)) +",
+    "    ggplot2::geom_point()",
+    "} else {",
+    "  # Fallback plotting code",
+    "  plot <- plot(x, y)",
+    "}"
+  ), "R/conditional_example.R")
+}
+```
+
+## 8. Function to check and update dependencies
+```{r}
+check_and_update_deps <- function() {
+  # Check for outdated packages
+  old <- old.packages()
+  
+  if (!is.null(old)) {
+    cat("Outdated packages:\n")
+    print(old[, c("Package", "Installed", "Available")])
+    
+    # Update packages
+    update.packages(ask = FALSE)
+  } else {
+    cat("All packages are up to date.\n")
+  }
+}
+```
+
+# Example usage:
+```{r}
+if (FALSE) {  # Prevent accidental execution
+  # Initialize dependency management
+  deps <- manage_dependencies()
+  
+  # Add core dependencies
+  deps$add("dplyr", "Imports")
+  deps$add("ggplot2", "Imports")
+  
+  # Add development dependencies
+  install_dev_dependencies()
+  
+  # Set up repositories
+  setup_repositories()
+  
+  # Check system dependencies
+  check_system_dependencies()
+  
+  # Create documentation
+  create_dependency_docs()
+  
+  # Check for updates
+  check_and_update_deps()
+}
+```

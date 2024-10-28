@@ -19,3 +19,4 @@ src/*.dll
 .Rdata
 .httr-oauth
 .quarto
+.txt
