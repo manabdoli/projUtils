@@ -16,11 +16,14 @@ usethis::use_mit_license()
 
 # If the git is not initialized
 usethis::use_git()       # Initialize git
-usethis::use_github()
+usethis::use_github(private = TRUE, protocol = "ssh")
 
 # Initial commit
 system("git add .")
 system('git commit -m "Initial commit"')
+
+# I had to set the upstream branch manually
+system("git push --set-upstream origin main")
 
 # Create development version
 create_dev_version()

@@ -17,3 +17,5 @@ Suggests:
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 License: MIT + file LICENSE
+URL: https://github.com/manabdoli/projUtils
+BugReports: https://github.com/manabdoli/projUtils/issues
