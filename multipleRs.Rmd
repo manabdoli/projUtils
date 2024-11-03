@@ -1,0 +1,53 @@
+# Managing multiple Rs on Mac
+
+Reference: https://www.monicathieu.com/posts/2024-05-21-multiple-r-versions/
+
+First, we need to ask Mac to forget the installed R's so that new ones can be installed without removing the old one.
+
+
+Find all packages related to R:
+
+```{}
+pkgutil --pkgs='org.?-project*'
+```
+
+```{r, include=FALSE}
+#system("pkgutil --pkgs='org.?-project*'")
+```
+
+
+```{}
+org.R-project.arm64.R.GUI.pkg
+org.r-project.R.el-capitan.fw.pkg
+org.r-project.arm64.tcltk
+org.r-project.x86_64.tcltk.x11
+org.R-project.R.GUI.pkg
+org.R-project.arm64.R.fw.pkg
+org.r-project.x86_64.texinfo
+org.r-project.arm64.texinfo
+org.r-project.R.el-capitan.GUI.pkg
+```
+
+Forget them all, one by one, till noe shows up on rerun of the above code. Here is an example:
+
+```{}
+sudo pkgutil --forget org.R-project.arm64.R.GUI.pkg
+```
+
+Run the following to see the currently installed versions and the active one:
+
+```{}
+ls -lh /Library/Frameworks/R.framework/Versions
+```
+
+```{r, echo=FALSE, message=FALSE}
+system('ls -lh /Library/Frameworks/R.framework/Versions', intern = TRUE) |> sapply(function(x) cat(x, '\n')) -> tmp
+```
+
+If you need to change the active one, use the following instructions:
+
+```{}
+# Symbolic Link: ln -s source destination
+ln -s /Library/Frameworks/R.framework/Versions/4.1-arm64 /Library/Frameworks/R.framework/Versions/Current
+```
+
