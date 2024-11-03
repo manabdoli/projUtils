@@ -51,3 +51,105 @@ If you need to change the active one, use the following instructions:
 ln -s /Library/Frameworks/R.framework/Versions/4.1-arm64 /Library/Frameworks/R.framework/Versions/Current
 ```
 
+## R, Miniconda and VSCode
+Reference: https://www.codydehaan.com/blog/vscode-miniconda-r/
+
+### Miniconda
+Install. 
+
+To disable auto activating `base` environment:
+```{}
+conda config --set auto_activate_base False
+```
+
+#### Cloning
+References:
+
+- https://stackoverflow.com/questions/40700039/how-can-you-clone-a-conda-environment-into-the-root-environment and 
+- https://stackoverflow.com/questions/57701571/what-is-the-right-way-to-update-anaconda-and-conda-base-environments
+
+
+To clone an environment `envA` as `envB` on the same device:
+```{}
+conda create --name envB --clone envA
+```
+
+To clone an `envA` as `envB` using a `yml` file:
+
+```{}
+conda activate envA
+conda env export > enviroment_A.yml
+conda env create -n envB --file environment_A.yml
+```
+
+Similarly, an text file can be used for closing:
+
+```{}
+conda activate envA
+conda list --explicit > spec_file_A.txt
+conda env create -n envB --file spec_file_A.txt
+```
+
+To update an environment, we can use `spec_file_A.txt` and `install` command:
+
+```{}
+conda install -n envB --file spec_file_A.txt
+```
+
+
+#### Updating
+To update all environments:
+
+```{}
+conda update --all
+```
+
+To update a given environment:
+
+```{}
+conda update -n envB --all
+```
+
+To update an environment according to a `yml` file:
+
+```{}
+conda env update -n envB --file environment_A.yml  
+```
+
+#### Essential Packages
+
+  - `r-base`
+  - `radian`
+  - `r-languageserver`
+  - `r-tidyverse`
+  - `r-renv`
+
+#### `renv`
+
+- `renv::init()`: To initiate `renv`.
+  - Creates the `renv.lock` lockfile.
+  - Creates/updates `.Rprofile`.
+  - Creates `renv` folder with `renv/settings.json` and `renv/activate.R` files.
+  
+- `renv::snapshot()`: To update the `renv.lock` lockfile.
+  - This will update the `renv.lock` particularly after new libraries are installed.
+    - Using `renv::install()` reduces the number of downloads when multiple projects are managed on the same device.
+    - Use `renv::update()` to update packages.
+
+- `renv::restore()`: To recreate the same environment documented in `renv.lock`. It seems that the other three file also needs to be shared when cloning the environment.
+  - Run this after each pull that includes changes to any of the `renv` files.
+  
+
+### VSCodium
+Install `VSCodium` or `VS Code`.
+
+Install `R Extension`.
+
+Updating the extension settings:
+
+- Enable Bracketed Paste
+- Rpath: `Path-to-miniconda3/[envs/envName/]bin/R`
+- Rterm: Mac — `Path-to-miniconda3/[envs/envName/]bin/radian`
+- Rterm: Option — Add `--r-binary=Path-to-miniconda3/[envs/envName/]bin/R`
+```
+
