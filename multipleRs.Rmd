@@ -120,10 +120,17 @@ conda env update -n envB --file environment_A.yml
 
   - `r-base`
   - `radian`
+  - `r-renv`
+  - `r-httpgd`
+  - `r-devtools`
+
+Starting with R `4.2.0` I was able to install the above libraries via conda at the expense of upgrading to `4.3.1`. But the langugage server could not be installed.
+
   - `r-languageserver`
   - `r-tidyverse`
-  - `r-renv`
 
+Packages installed by `conda` are not accessible within packages that are maintained by `renv`.
+A work around is to install does packages from source file downloaded by `conda` (at `.cache`) so that they can be usedbut not tracked by `renv`.
 #### `renv`
 
 - `renv::init()`: To initiate `renv`.
