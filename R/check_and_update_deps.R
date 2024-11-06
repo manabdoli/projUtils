@@ -4,7 +4,7 @@ check_and_update_deps <- function() {
 
   if (!is.null(old)) {
     cat("Outdated packages:\n")
-    print(old[, c("Package", "Installed", "Available")])
+    print(old[, c("Package", "Installed", "Built", "ReposVer")])
 
     # Update packages
     update.packages(ask = FALSE)
