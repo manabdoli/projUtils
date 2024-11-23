@@ -1,4 +1,6 @@
 #' Creating a new package
+#' This creates a project and opens it in a new R instance
+#' @export
 create_package <- function(path, add2repo=TRUE) {
   usethis::create_package(path)
   usethis::use_git()       # Initialize git

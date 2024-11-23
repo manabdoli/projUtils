@@ -1,5 +1,5 @@
 #' Build and Install
-#'
+#' @export
 build_install <- function(clean = FALSE){
   cwd <- getwd()
   on.exit(setwd(cwd))

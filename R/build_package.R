@@ -1,5 +1,5 @@
 #' Build Package
-#'
+#' @export
 build_package <- function(binary=FALSE){
   build_docs()
   if(binary){

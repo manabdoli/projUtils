@@ -1,3 +1,4 @@
+#' @export
 check_and_update_deps <- function() {
   # Check for outdated packages
   old <- old.packages()

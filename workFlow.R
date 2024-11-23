@@ -1,5 +1,7 @@
 create_package("projUtils")
-setwd(paste0(getwd(), .Platform$file.sep ,"projUtils"))
+# By default, the project is added to the repository and a new instance of the Rstudio is opened.
+
+# setwd(paste0(getwd(), .Platform$file.sep ,"projUtils"))
 
 # Set up version control infrastructure
 setup_gitignore()
@@ -11,20 +13,22 @@ setup_description(
   maintainer_name = "Mansour Abdoli. PhD",
   maintainer_email = "mabdoli@fullerton.edu",
   Description = "A package to help me create new project and manage them.")
-# Adding license
+# Creating mit_license and adding it to the DESCRIPTION
 usethis::use_mit_license()
 
-# If the git is not initialized
+# Initilize Git, if the git is not initialized, and performing Initial commit
 usethis::use_git()       # Initialize git
+
+# # Initial commit
+# system("git add .")
+# system('git commit -m "Initial commit"')
+
 usethis::use_github(private = TRUE, protocol = "ssh")
 
-# Initial commit
-system("git add .")
-system('git commit -m "Initial commit"')
+# # If needed, we can set the upstream branch manually
+# system("git push --set-upstream origin main")
 
-# I had to set the upstream branch manually
-system("git push --set-upstream origin main")
-
+# Development version. ####
 # Create development version
 create_dev_version()
 

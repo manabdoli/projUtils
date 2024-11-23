@@ -1,4 +1,5 @@
-#'
+#' Creating the DESCRIPTION file
+#' @export
 setup_description <- function(pkg_name,
                               Title="What the Package Does (One Line, Title Case)",
                               maintainer_name, maintainer_email,
